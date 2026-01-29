@@ -6,6 +6,8 @@ from time import sleep
 import struct
 from dataclasses import dataclass
 from textwrap import dedent
+from generics import write_to_csv, get_next_midnight, rename_log_file, DATA_LOG_PATH
+from datetime import datetime
 
 
 RIVER_SENSOR_COMM_0 = b'\x80\x04\x00\x01\x00\x09\x7F\xDD'
@@ -32,14 +34,17 @@ class ResponseMessage:
         return cls(*unpacked_data)
 
     def print_clean(self):
-        def print_clean(self):
-            print(dedent(f"""\
-            --- SENSOR READINGS ---
-            Water Level:     {self.water_level / 1000.0:.3f} m
-            Air Height:      {self.air_height / 1000.0:.3f} m
-            Dist to Bottom:  {self.bottom_to_gauge / 100.0:.3f} m 
-            -----------------------
-            """))
+        print(dedent(f"""\
+        --- SENSOR READINGS ---
+        Water Level:     {self.water_level / 1000.0:.3f} m
+        Air Height:      {self.air_height / 1000.0:.3f} m
+        Dist to Bottom:  {self.bottom_to_gauge / 100.0:.3f} m 
+        -----------------------
+        """))
+
+    def save_to_file(self, filepath: str) -> None:
+        date = datetime.now()
+        write_to_csv(filepath, [date, self.air_height])
 
 
 def do_crc_check(data) -> int:
@@ -70,19 +75,32 @@ RIVER_SENSOR_PORT.rs485_mode = RS485Settings(
 )
 
 if __name__ == "__main__":
+    now = datetime.now()
+    next_midnight = get_next_midnight(now)
     while RIVER_SENSOR_PORT.is_open:
         # RIVER_SENSOR_PORT.write(RIVER_SENSOR_COMM_0)
         # sleep(5)
         RIVER_SENSOR_PORT.write(RIVER_SENSOR_COMM_0)
-        sleep(5)
+        sleep(5)  # TODO: Change this value, possible
         raw_data = RIVER_SENSOR_PORT.read(RIVER_SENSOR_PORT.in_waiting)
         if do_crc_check(raw_data) != 0:
             print('Reply:', raw_data)
             print('CRC Check Failed!')
+            # TODO: Add retry mechanism (3 retries every 5 seconds).
         else:
+            if now > next_midnight:
+                rename_log_file(now)
+                next_midnight = get_next_midnight(now)
+
+            # Handle Displaying Data
             print('Reply:', raw_data)
             data = ResponseMessage.from_bytes(raw_data)
             print(data)
             data.print_clean()
+
+            # Handle Saving Data
+            data.save_to_file(DATA_LOG_PATH)
+
+            now = datetime.now()
     else:
         print('PORT CLOSED')

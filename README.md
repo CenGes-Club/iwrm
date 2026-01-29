@@ -4,7 +4,6 @@ Integrated Water Reading Management—an embedded systems project for monitoring
 
 ## Setup
 
----
 ### SSH
 First, in order to access the device without using a monitor, we have to setup the SSH connection. To do so, follow these steps:
 1. Create AP Point with the following ssid and password:

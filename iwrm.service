@@ -1,0 +1,14 @@
+[Unit]
+Description=IWRM Main Script
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python /home/postekit/Desktop/iwrm/main.py > /home/postekit/Desktop/iwrm/logs.log
+WorkingDirectory=/home/postekit/Desktop/iwrm
+StandardOutput=journal
+StandardError=journal
+Restart=always
+User=postekit
+
+[Install]
+WantedBy=multi-user.target
