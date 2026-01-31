@@ -9,7 +9,6 @@ from textwrap import dedent
 from generics import write_to_csv, get_next_midnight, rename_log_file, DATA_LOG_PATH
 from datetime import datetime
 
-
 RIVER_SENSOR_COMM_0 = b'\x80\x04\x00\x01\x00\x09\x7F\xDD'
 
 
@@ -57,14 +56,24 @@ GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)
 
 
-RIVER_SENSOR_PORT = serial.Serial(
-    port='/dev/ttyAMA3',
-    baudrate=9600,
-    parity=serial.PARITY_NONE,
-    stopbits=serial.STOPBITS_ONE,
-    bytesize=serial.EIGHTBITS,
-    timeout=1
-)
+def connect_to_serial() -> serial.Serial:
+    try:
+        ser = serial.Serial(
+            port='/dev/ttyAMA3',
+            baudrate=9600,
+            parity=serial.PARITY_NONE,
+            stopbits=serial.STOPBITS_ONE,
+            bytesize=serial.EIGHTBITS,
+            timeout=1
+        )
+    except serial.SerialException as e:
+        print(f'Waiting for RS485 connection: {e}')
+        sleep(3)
+    else:
+        return ser
+
+
+RIVER_SENSOR_PORT = connect_to_serial()
 
 
 RIVER_SENSOR_PORT.rs485_mode = RS485Settings(
@@ -73,6 +82,7 @@ RIVER_SENSOR_PORT.rs485_mode = RS485Settings(
     delay_before_tx=0.0,
     delay_before_rx=0.0
 )
+
 
 if __name__ == "__main__":
     now = datetime.now()
