@@ -1,14 +1,17 @@
 [Unit]
 Description=IWRM Main Script
-After=network.target
+After=dev-ttyAMA3.device
+BindsTo=dev-ttyAMA3.device
 
 [Service]
-ExecStart=/usr/bin/python /home/postekit/Desktop/iwrm/main.py > /home/postekit/Desktop/iwrm/logs.log
+ExecStart=/usr/bin/python /home/postekit/Desktop/iwrm/main.py
 WorkingDirectory=/home/postekit/Desktop/iwrm
 StandardOutput=journal
 StandardError=journal
-Restart=always
+Restart=on-failure
+RestartSec=3s
 User=postekit
+Group=dialout
 
 [Install]
 WantedBy=multi-user.target

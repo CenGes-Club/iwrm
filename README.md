@@ -3,6 +3,11 @@
 Integrated Water Reading Management—an embedded systems project for monitoring flood levels in rivers.
 
 ## Setup
+### Permissions
+In order to run the systemd service properly, you must grant the `postekit` user `dialout` permissions
+```bash
+sudo usermod -a -G dialout postekit
+```
 
 ### SSH
 First, in order to access the device without using a monitor, we have to setup the SSH connection. To do so, follow these steps:
